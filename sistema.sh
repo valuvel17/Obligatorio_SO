@@ -9,7 +9,7 @@ cargando() {
 }
 
 registrarUsuario() {
-    echo "Desea Registrarse (Y/N)"
+    echo "¿Desea Registrar un Usuario? (Y/N)"
     read resp 
     while ! [[ "$resp" == "Y" || "$resp" == "y" || "$resp" == "N" || "$resp" == "n" ]]; do
         echo "Seleccione opción válida"
@@ -19,7 +19,7 @@ registrarUsuario() {
         return 
     fi
     clear
-	echo "Pantalla de Registro"
+	echo "Pantalla de Registro de Usuarios"
 
     echo -n "Ingrese nombre:"
     read nomU
@@ -40,9 +40,10 @@ registrarUsuario() {
     read rolU
 	echo -ne "\033[F\033[K" 
     while ! [[ "$rolU" == "A" || "$rolU" == "a" || "$rolU" == "C" || "$rolU" == "c" ]]; do
-        echo -n "Rol inexistente. Seleccione rol válido: A-(administrador) C-(cliente): "
+        echo -n "Seleccione rol válido A-(administrador) C-(cliente): "
         read rolU
-		echo -ne "\033[F\033[K" 
+        clear
+		#echo -ne "\033[F\033[K" 
     done
 
     echo "Datos a Agregar:"
@@ -75,13 +76,13 @@ registrarUsuario() {
                 echo "Cedula: $ciU Contrasena: $contraU" >> registro_admin.txt
                 echo "Datos - $nomU - $telU - $fecNacU" >> registro_admin.txt
                 echo "Se ha registrado a $nomU como Administrador correctamente"
-                sleep 4
+                sleep 1
                 clear
             else 
                 echo "Cedula: $ciU Contrasena: $contraU" >> registro_cliente.txt
                 echo "Datos - $nomU - $telU - $fecNacU" >> registro_cliente.txt
                 echo "Se ha registrado a $nomU como Cliente correctamente"
-                sleep 4
+                sleep 1
                 clear
                 return 
             fi
@@ -96,11 +97,114 @@ registrarUsuario() {
     fi
 }
 
+registrarMascota() {
+    clear
+    echo "¿Desea Registrar una Mascota? (Y/N)"
+    read resp 
+    while ! [[ "$resp" == "Y" || "$resp" == "y" || "$resp" == "N" || "$resp" == "n" ]]; do
+        echo "Seleccione opción válida"
+        read resp
+    done
+    if [[ "$resp" == "N" || "$resp" == "n" ]]; then
+        clear
+        return 
+    fi
+    clear
+    cargando
+    echo "Pantalla de Registro de Mascotas."
+
+    echo -n "Ingrese numero identificador:"
+    num=0
+    read num
+    echo -ne "\033[F\033[K" 
+    while ! [[ "$num" =~ ^[1-9][0-9]*$ ]] || grep -q "Datos: - $num" "registro_mascota.txt"; do
+        if ! [[ "$num" =~ ^[1-9][0-9]*$ ]]; then 
+            echo "El numero debe ser positivo y no debe comenzar en 0"
+            echo -n "Ingrese numero identificador:"
+            read num
+            echo -ne "\033[F\033[K"
+            echo -ne "\033[F\033[K"
+            echo -ne "\033[F\033[K"  
+        else 
+            echo "El numero ingresado esta utilizado"
+            echo -n "Ingrese un nuevo numero identificador:"
+            read num
+            echo -ne "\033[F\033[K"
+            echo -ne "\033[F\033[K"
+            echo -ne "\033[F\033[K"  
+        fi 
+    done
+    
+    echo -n "Ingrese el tipo de mascota:"
+    read tipo
+	echo -ne "\033[F\033[K" 
+    echo -n "Ingrese el nombre:"
+    read nom
+	echo -ne "\033[F\033[K" 
+    echo -n "Ingrese el sexo:"
+    read sexo
+	echo -ne "\033[F\033[K" 
+    echo -n "Ingrese edad (Años):"
+    read edad
+    echo -ne "\033[F\033[K"    
+
+    while ! [[ "$edad" =~ ^[1-9][0-9]*$ && $edad > 0 ]]; do # metodo para ver si es un entero que no empieza en 0
+        if [[ "$edad" =~ ^[1-9][0-9]*$ ]]; then 
+            echo "La edad debe ser un numero positivo y no debe comenzar en 0"
+            echo -n "Ingrese edad:"
+            read edad
+            echo -ne "\033[F\033[K"
+            echo -ne "\033[F\033[K"
+            echo -ne "\033[F\033[K"  
+        else 
+            echo "La mascota debe tener mas de 1 año"
+            echo -n "Ingrese edad:"
+            read edad
+            echo -ne "\033[F\033[K"
+            echo -ne "\033[F\033[K"
+            echo -ne "\033[F\033[K"  
+        fi 
+    done
+    
+    echo -n "Ingrese descripcion: "
+    read desc
+	echo -ne "\033[F\033[K" 
+    echo -n "Ingrese fecha de ingreso (dia/mes/año): "
+    read fec
+	echo -ne "\033[F\033[K" 
+    cargando
+    echo "Datos a Agregar:"
+    echo ""
+    echo "Nombre: $nom"
+    echo "Numero Identificador: $num"
+    echo "Tipo: $tipo"
+    echo "Sexo: $sexo"
+    echo "Edad: $edad"
+    echo "Descripcion: $desc"
+    echo "Fecha de Ingreso: $fec"
+    echo ""
+
+    echo "¿Desea agregar estos datos (Y/N)?"
+    read respuesta
+    while ! [[ "$respuesta" == "Y" || "$respuesta" == "y" || "$respuesta" == "N" || "$respuesta" == "n" ]]; do
+        echo "Seleccione opción válida"
+        read respuesta
+    done
+	sleep 0.5
+    clear
+	cargando
+    if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
+        echo "Datos: - $num - $tipo - $nom - $sexo - $edad - $desc - $fec " >> registro_mascota.txt 
+        echo "Mascota registrada correctamente"
+    else 
+        registrarMascota
+    fi
+}
+
 registarAdmin() {
     echo "Sin administradores."
-    sleep 0.5
-    echo "Registre administrador"
-    sleep 0.5
+    sleep 1
+
     clear 
     echo "Pantalla de Registro"
     
@@ -136,6 +240,7 @@ registarAdmin() {
 }
 
 
+
 funcionAdmin() {
 	nombre=$1
 	echo "Se ingresó como Administrador."
@@ -144,51 +249,82 @@ funcionAdmin() {
     while [ "$valida" = "true" ]; do
         echo "Seleccione Opción:"
         echo "1- Registrar Usuario"
-        echo "2- Listar mascotas disponibles para adopción"    
-        echo "3- Adoptar mascota"
-        echo "4- Salir"
+        echo "2- Registrar Mascota"
+        echo "3- Listar mascotas disponibles para adopción"    
+        echo "4- Adoptar mascota"
+        echo "5- Salir"
         read respuesta
         if [ "$respuesta" = "1" ]; then
             registrarUsuario
         elif [ "$respuesta" = "2" ]; then
-            echo "Listando mascotas disponibles..."
+            registrarMascota
         elif [ "$respuesta" = "3" ]; then
-            echo "Proceso de adopción..."
+            echo "Listando mascotas disponibles..."
         elif [ "$respuesta" = "4" ]; then
+            echo "Proceso de adopción..."
+        elif [ "$respuesta" = "5" ]; then
             valida="false"
         else 
+            clear
             echo "Número inválido. Seleccione una opción correcta."
         fi
     done
 }
+
+funcionCliente() {
+	nombre=$1
+	echo "Se ingresó como Cliente."
+	echo "Bienvenido/a $nombre!"
+    valida="true"
+    while [ "$valida" = "true" ]; do
+        echo "Seleccione Opción:"
+        echo "1- Listar mascotas disponibles para adopción"    
+        echo "2- Adoptar mascota"
+        echo "3- Salir"
+        read respuesta
+        if [ "$respuesta" = "1" ]; then
+            echo "Listando mascotas disponibles..."
+        elif [ "$respuesta" = "2" ]; then
+            echo "Proceso de adopción..."
+        elif [ "$respuesta" = "3" ]; then
+            valida="false"
+        else 
+            clear
+            echo "Número inválido. Seleccione una opción correcta."
+        fi
+    done
+}
+
 
 #---------------------------------------------------------------------------------------------------------------------#
 
 if ! [ -s registro_admin.txt ]; then
     clear
     registarAdmin
-fi 
+fi
+
 acceder="true"
-ci=""
-contra=""
-clear
-cargando
 while [ "$acceder" = "true" ]; do
     clear
-    echo "Ingrese cédula: "
+    cargando
+    echo "Inicio de Sesion."
+    echo -n "Ingrese cédula: "
     read ci
+    echo -ne "\033[F\033[K" 
+
     while [ -z "$ci" ]; do
         echo "Cédula inválida, ingrese cédula: "
         read ci
+        echo -ne "\033[F\033[K" 
     done
     
     sleep 0.3
-    clear
     echo "Ingrese contraseña: "
     read contra
-    sleep 0.3
+    echo -ne "\033[F\033[K" 
 	clear
 	cargando
+
     # Obtener la contraseña y nombre de administrador
     contraValidaA=$(grep "Cedula: $ci Contrasena: " "registro_admin.txt" | awk -F " Contrasena: " '{print $2}')
     nombreAdmin=$(grep -A 1 "Cedula: $ci" "registro_admin.txt" | awk -F " - " '{print $2}' | xargs)
@@ -198,30 +334,27 @@ while [ "$acceder" = "true" ]; do
     nombreCliente=$(grep -A 1 "Cedula: $ci" "registro_cliente.txt" | awk -F " - " '{print $2}' | xargs)
 
     if [[ -z "$contraValidaA" && -z "$contraValidaC" ]] || [[ "$contraValidaA" != "$contra" && "$contraValidaC" != "$contra" ]]; then
-        echo "Credenciales incorrectas. Vuelva a intentar."
+        echo "Credenciales incorrectas."
         sleep 1
     fi
     
     if [ "$contraValidaA" = "$contra" ]; then
         funcionAdmin $nombreAdmin
         clear
-        echo "Saliendo..."
+        cargando
         sleep 0.5
         clear            
     fi
     
     if [ "$contraValidaC" = "$contra" ]; then
-		cargando
-        echo "Se ingresó como Cliente."
-        echo "Bienvenido $nombreCliente!"
-        wait 2
+        funcionCliente $nombreCliente
         clear
-        echo "Saliendo..."
+        cargando
         sleep 0.5
-        clear    
+        clear
     fi
 
-    echo "¿Desea salir? (Y/N)"
+    echo "Y: Salir - N: Volver a Iniciar Sesion"
     read respuesta
     while ! [[ "$respuesta" == "Y" || "$respuesta" == "y" || "$respuesta" == "N" || "$respuesta" == "n" ]]; do
         echo "Seleccione opción válida"
@@ -229,6 +362,6 @@ while [ "$acceder" = "true" ]; do
     done
     if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
         acceder="false"
-    fi 
+    fi
 done
 clear
