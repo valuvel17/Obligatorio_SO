@@ -186,7 +186,6 @@ registrarMascota() {
     echo -n "Ingrese edad (Años):"
     read edad
     echo -ne "\033[F\033[K"
-    contador = 0
     contador=0
     while ! [[ "$edad" =~ ^[1-9][0-9]*$ && $edad > 0 ]]; do
         contador=$((contador + 1))
@@ -205,8 +204,8 @@ registrarMascota() {
         echo "contador0"
     fi
 
-    if [ [ -z "$nom" ] || [ -z "$num" ] || [ -z "$tipo" ] || [ -z "$sexo" ] || [ -z "$edad" ] || [ -z "$desc" ] || [ -z "$fec" ] ]; then
-        echo "Hubieron datos vacios, volver a intentar (y) o salir (x) : "
+    if [ -z "$nom" ] || [ -z "$num" ] || [ -z "$tipo" ] || [ -z "$sexo" ] || [ -z "$edad" ]; then
+        echo "Hubieron datos vacios, volver a intentar (Y/N) : "
         read r
         if [[ "$r" == "Y" || "$r" == "y" ]]; then
             registrarMascota
@@ -256,6 +255,63 @@ registrarMascota() {
     fi
 }
 
+listarMascotas(){
+    clear
+    if [ ! -s "registro_mascota.txt" ]; then
+        echo "No hay mascotas registradas."
+    else
+        echo "Mascotas disponibles para adopción:"
+        while IFS= read linea; do
+            echo "$linea"
+        done < "registro_mascota.txt"
+    fi
+    echo "Presione cualquier tecla para continuar..."
+    read
+    clear
+}
+
+adoptarMascota(){
+    clear
+    if [ ! -s "registro_mascota.txt" ]; then
+        echo "No hay mascotas para adoptar"
+        echo "Presione cualquier tecla para continuar..."
+        read
+        clear
+    else
+        echo "Mascotas disponibles para adopción:"
+        while IFS= read -r linea; do
+            # Extraer el ID y el nombre de cada línea
+            id=$(echo "$linea" | awk -F " - " '{print $2}')
+            nombre=$(echo "$linea" | awk -F " - " '{print $4}')
+            echo "ID: $id - Nombre: $nombre"
+        done < "registro_mascota.txt"
+        echo ""
+        echo "Ingrese el número de la mascota que va a adoptar:"
+        read numAdopcion
+        
+        # Verificar si el número de mascota existe en el archivo
+        mascota=$(grep "Datos: - $numAdopcion" "registro_mascota.txt")
+        if [ -z "$mascota" ]; then
+            clear
+            echo "El ID no corresponde a ninguna mascota"
+            echo "Presione cualquier tecla"
+            read
+            adoptarMascota
+        else
+            clear
+            echo -n "Ingrese fecha de adopcion (dd/mm/yyyy): "
+            read fecha
+            echo "Usted ha adoptado la mascota con ID $numAdopcion exitosamente!"
+            echo 
+            echo "$mascota - Fecha de adopción: $fecha" >> adopciones.txt
+            grep -v "Datos: - $numAdopcion" "registro_mascota.txt" > temp.txt && mv temp.txt registro_mascota.txt
+        fi
+        echo "Presione cualquier tecla para continuar..."
+        read
+        clear
+    fi
+}
+
 registarAdmin() {
     echo "Sin administradores."
     sleep 1
@@ -291,7 +347,7 @@ funcionAdmin() {
         elif [ "$respuesta" = "2" ]; then
             registrarMascota
         elif [ "$respuesta" = "3" ]; then
-            echo "Listando mascotas disponibles..."
+            listarMascotas
         elif [ "$respuesta" = "4" ]; then
             valida="false"
         else
@@ -302,6 +358,7 @@ funcionAdmin() {
 }
 
 funcionCliente() {
+    clear
     nombre=$1
     echo "Se ingresó como Cliente."
     echo "Bienvenido/a $nombre!"
@@ -313,9 +370,9 @@ funcionCliente() {
         echo "3- Salir"
         read respuesta
         if [ "$respuesta" = "1" ]; then
-            echo "Listando mascotas disponibles..."
+            listarMascotas
         elif [ "$respuesta" = "2" ]; then
-            echo "Proceso de adopción..."
+            adoptarMascota
         elif [ "$respuesta" = "3" ]; then
             valida="false"
         else
@@ -395,7 +452,7 @@ while [ "$acceder" = "true" ]; do
         echo "Seleccione opción válida"
         read respuesta
     done
-    if [[ "$respuesta" == "N" || "$respuesta" == "n" ]]; then
+    if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
         acceder="false"
     fi
 done
