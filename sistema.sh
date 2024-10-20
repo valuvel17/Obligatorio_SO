@@ -186,9 +186,8 @@ registrarMascota() {
     echo -n "Ingrese edad (Años):"
     read edad
     echo -ne "\033[F\033[K"
-    contador=0
+
     while ! [[ "$edad" =~ ^[1-9][0-9]*$ && $edad > 0 ]]; do
-        contador=$((contador + 1))
         if ! [[ "$edad" =~ ^[1-9][0-9]*$ ]]; then
             echo "La edad debe ser un numero positivo y no debe comenzar en 0"
             echo -n "Ingrese edad:"
@@ -199,10 +198,6 @@ registrarMascota() {
             read edad
         fi
     done
-
-    if [ "$contador" -gt 0 ]; then
-        echo "contador0"
-    fi
 
     if [ -z "$nom" ] || [ -z "$num" ] || [ -z "$tipo" ] || [ -z "$sexo" ] || [ -z "$edad" ]; then
         echo "Hubieron datos vacios, volver a intentar (Y/N) : "
@@ -242,6 +237,25 @@ registrarMascota() {
         cargando
         if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
             echo "Datos: - $num - $tipo - $nom - $sexo - $edad - $desc - $fec " >>registro_mascota.txt
+            # Buscar la línea que comienza con el tipo
+            linea=$(grep "^$tipo\>" tipos.txt)
+
+            if [ -n "$linea" ]; then # Si existe la línea
+
+                # Extraer la cantidad actual
+                cantidad=$(echo "$linea" | awk -F " - " '{print $2}')
+
+                # Sumar 1 a la cantidad
+                newCantidad=$((cantidad + 1))
+
+                # Reemplazar la línea completa con la nueva cantidad
+                sed -i "s/ $tipo - $cantidad - / $tipo - $newCantidad - /" tipos.txt
+
+            else
+                # Si no existe la línea, agregarla al archivo
+                echo "$tipo - 1 - 0" >>tipos.txt
+            fi
+
             echo "Mascota registrada correctamente"
         else
             echo "Volver a intentar (y) o salir (x) : "
@@ -255,7 +269,7 @@ registrarMascota() {
     fi
 }
 
-listarMascotas(){
+listarMascotas() {
     clear
     if [ ! -s "registro_mascota.txt" ]; then
         echo "No hay mascotas registradas."
@@ -263,14 +277,14 @@ listarMascotas(){
         echo "Mascotas disponibles para adopción:"
         while IFS= read linea; do
             echo "$linea"
-        done < "registro_mascota.txt"
+        done <"registro_mascota.txt"
     fi
     echo "Presione cualquier tecla para continuar..."
     read
     clear
 }
 
-adoptarMascota(){
+adoptarMascota() {
     clear
     if [ ! -s "registro_mascota.txt" ]; then
         echo "No hay mascotas para adoptar"
@@ -284,11 +298,11 @@ adoptarMascota(){
             id=$(echo "$linea" | awk -F " - " '{print $2}')
             nombre=$(echo "$linea" | awk -F " - " '{print $4}')
             echo "ID: $id - Nombre: $nombre"
-        done < "registro_mascota.txt"
+        done <"registro_mascota.txt"
         echo ""
         echo "Ingrese el número de la mascota que va a adoptar:"
         read numAdopcion
-        
+
         # Verificar si el número de mascota existe en el archivo
         mascota=$(grep "Datos: - $numAdopcion" "registro_mascota.txt")
         if [ -z "$mascota" ]; then
@@ -302,9 +316,23 @@ adoptarMascota(){
             echo -n "Ingrese fecha de adopcion (dd/mm/yyyy): "
             read fecha
             echo "Usted ha adoptado la mascota con ID $numAdopcion exitosamente!"
-            echo 
-            echo "$mascota - Fecha de adopción: $fecha" >> adopciones.txt
+            echo
+            echo "$mascota - Fecha de adopción: $fecha" >>adopciones.txt
             grep -v "Datos: - $numAdopcion" "registro_mascota.txt" > temp.txt && mv temp.txt registro_mascota.txt
+
+            tipo=$(grep "Datos: - $id - " registro_mascota.txt | awk -F " - " '{print $3}')
+            linea=$(grep "^$tipo\>" tipos.txt)
+
+            # Extraer la cantidad actual de adoptados
+            cantidadTotal=$(echo "$linea" | awk -F " - " '{print $2}')  # Segunda posición
+            cantidadAdoptados=$(echo "$linea" | awk -F " - " '{print $3}')      # Tercera posición
+
+            cantidadAdoptados=$((cantidadAdoptados + 1))
+
+            # Reemplazar la línea completa con las nuevas cantidades
+            sed -i "s/^$tipo - [0-9]* - [0-9]*$/$tipo - $cantidadTotal - $cantidadAdoptados/" tipos.txt
+
+
         fi
         echo "Presione cualquier tecla para continuar..."
         read
@@ -330,6 +358,20 @@ registarAdmin() {
     clear
 }
 
+estadisticas() {
+    clear
+    echo "Estadisticas:"
+    echo "Porcentaje de adopcion por tipo de mascota: "
+    listarPorcentajes
+    echo "El mes en que se realizan mas adopciones es:"
+    mostrarMesMasAdopciones
+    echo "Edad promedio de los animales adoptados:"
+    mostrarEdadPromedio
+    echo "Presione cualquier tecla para continuar:"
+    read
+    return
+}
+
 funcionAdmin() {
     nombre=$1
     valida="true"
@@ -340,7 +382,8 @@ funcionAdmin() {
         echo "1- Registrar Usuario"
         echo "2- Registrar Mascota"
         echo "3- Listar mascotas disponibles para adopción"
-        echo "4- Salir"
+        echo "4- Estadisticas"
+        echo "5- Salir"
         read respuesta
         if [ "$respuesta" = "1" ]; then
             registrarUsuario
@@ -349,6 +392,8 @@ funcionAdmin() {
         elif [ "$respuesta" = "3" ]; then
             listarMascotas
         elif [ "$respuesta" = "4" ]; then
+            estadisticas
+        elif [ "$respuesta" = "5" ]; then
             valida="false"
         else
             echo "Número inválido. Seleccione una opción correcta."

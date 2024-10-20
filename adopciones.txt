@@ -1,1 +1,4 @@
-Datos: - 4 - dsa - puto - si - 42 - mucho - s  - Fecha de adopción: 42223
+
+Datos: - 1 - p - 123 - 12421 - 12421421 - 412412 - 12421  - Fecha de adopción: 12123123
+Datos: - 421 - x - 12421421 - 21421412 - 241421412 - 12421421412 - 124214214  - Fecha de adopción: 42141
+Datos: - 124 - 142 - 52151 - 521521 - 21511 - 52151 - 52151  - Fecha de adopción: 421124
