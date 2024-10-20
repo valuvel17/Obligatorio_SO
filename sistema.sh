@@ -151,7 +151,7 @@ registrarMascota() {
     echo "Pantalla de Registro de Mascotas. (No se aceptan campos vacios)"
 
     echo -n "Ingrese numero identificador:"
-    num=0 # el numero identificador deberia ser unico cambiar
+    num=0
     read num
     echo -ne "\033[F\033[K"
     while ! [[ "$num" =~ ^[1-9][0-9]*$ ]] || grep -q "Datos: - $num" "registro_mascota.txt"; do
@@ -236,14 +236,12 @@ registrarMascota() {
         if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
             echo "Datos: - $num - $tipo - $nom - $sexo - $edad - $desc - $fec " >>registro_mascota.txt
 
+            ## sumar contador a tipo
             # Buscar la línea que comienza con el tipo
-            linea=$(grep "^$tipo - " tipos.txt) # Asegúrate de que hay un espacio después de $tipo
+            linea=$(grep "^$tipo - " tipos.txt)
 
             if [ -n "$linea" ]; then # Si existe la línea
-                # Extraer la cantidad actual
                 cantidad=$(echo "$linea" | awk -F " - " '{print $2}')
-
-                # Sumar 1 a la cantidad
                 newCantidad=$((cantidad + 1))
 
                 # Reemplazar la línea completa con la nueva cantidad
@@ -274,10 +272,18 @@ listarMascotas() {
         echo "No hay mascotas registradas."
     else
         echo "Mascotas disponibles para adopción:"
-        while IFS= read linea; do
-            echo "$linea"
+        while IFS= read -r linea; do
+            # Extraer los campos usando awk
+            nombre=$(echo "$linea" | awk -F " - " '{print $4}')           
+            tipo=$(echo "$linea" | awk -F " - " '{print $3}')             
+            edad=$(echo "$linea" | awk -F " - " '{print $6}')             
+            descripcion=$(echo "$linea" | awk -F " - " '{print $7}') 
+
+            # Formatear la salida
+            echo "$nombre - $tipo - $edad - $descripcion"
         done <"registro_mascota.txt"
     fi
+    echo ""
     echo "Presione cualquier tecla para continuar..."
     read
     clear
@@ -315,10 +321,15 @@ adoptarMascota() {
             echo -n "Ingrese fecha de adopcion (dd/mm/yyyy): "
             read fecha
             echo "Usted ha adoptado la mascota con ID $numAdopcion exitosamente!"
-            echo "$mascota - Fecha de adopción: $fecha" >>adopciones.txt
-            lineaDemascota=$(grep "Datos: - $numAdopcion - " registro_mascota.txt)                               #guardo la linea antes de que sea borrada
-            grep -v "Datos: - $numAdopcion" "registro_mascota.txt" >temp.txt && mv temp.txt registro_mascota.txt #borra la linea del registro con un archivo temporal
+            echo "$mascota- Fecha de adopción: $fecha" >>adopciones.txt
 
+            #guardo la linea antes de que sea borrada
+            lineaDemascota=$(grep "Datos: - $numAdopcion - " registro_mascota.txt)
+
+            #borra la linea del registro con un archivo temporal
+            grep -v "Datos: - $numAdopcion" "registro_mascota.txt" >temp.txt && mv temp.txt registro_mascota.txt
+
+            ##sumar contador de adoptados
             tipo=$(echo "$lineaDemascota" | awk -F " - " '{print $3}')
             linea=$(grep "^$tipo - " tipos.txt)
             cantidadTotal=$(echo "$linea" | awk -F " - " '{print $2}')
@@ -328,11 +339,63 @@ adoptarMascota() {
 
             # Reemplazar la línea completa con las nuevas cantidades
             sed -i "s/^$tipo - $cantidadTotal - [0-9]*$/$tipo - $cantidadTotal - $cantidadAdoptadosNueva/" tipos.txt
+
+            ## sumar contador de meses
+            mes=$(echo "$fecha" | awk -F "/" '{print $2}')
+            nombreMes=$(hallarNombre "$mes")
+            contadorActual=$(grep "^$nombreMes - " adopciones_meses.txt | awk -F " - " '{print $2}')
+            contadorNuevo=$((contadorActual + 1))
+            sed -i "s/^$nombreMes - $contadorActual/$nombreMes - $contadorNuevo/" adopciones_meses.txt
+
         fi
         echo "Presione cualquier tecla para continuar..."
         read
         clear
     fi
+}
+
+hallarNombre() {
+    case $1 in
+    01)
+        echo "Enero"
+        ;;
+    02)
+        echo "Febrero"
+        ;;
+    03)
+        echo "Marzo"
+        ;;
+    04)
+        echo "Abril"
+        ;;
+    05)
+        echo "Mayo"
+        ;;
+    06)
+        echo "Junio"
+        ;;
+    07)
+        echo "Julio"
+        ;;
+    08)
+        echo "Agosto"
+        ;;
+    09)
+        echo "Septiembre"
+        ;;
+    10)
+        echo "Octubre"
+        ;;
+    11)
+        echo "Noviembre"
+        ;;
+    12)
+        echo "Diciembre"
+        ;;
+    *)
+        echo "" # Devuelve vacío para entradas no válidas
+        ;;
+    esac
 }
 
 registarAdmin() {
@@ -362,7 +425,53 @@ listarPorcentajes() {
         porcentaje=$((adoptados * 100 / total)) # Multiplicamos por 100 para obtener el porcentaje
         echo "Porcentaje de tipo $tipo: $porcentaje %"
     done <"tipos.txt"
+}
 
+mostrarMesMasAdopciones() {
+
+    # Inicializar un array para almacenar las adopciones por mes
+    mes_mas_adoptado=""
+    max_adopciones=0
+
+    # Leer el archivo adopciones_meses línea por línea
+    while IFS= read -r linea; do
+        # Extraer el mes y la cantidad de adopciones
+        mes=$(echo "$linea" | awk -F " - " '{print $1}')
+        cantidad=$(echo "$linea" | awk -F " - " '{print $2}')
+
+        # Comparar para encontrar el mes con más adopciones
+        if [ "$cantidad" -ge "$max_adopciones" ]; then
+            max_adopciones=$cantidad
+            mes_mas_adoptado=$mes
+        fi
+    done <adopciones_meses.txt
+
+    # Mostrar el mes con más adopciones
+    echo "$mes_mas_adoptado con $max_adopciones adopciones."
+}
+
+mostrarEdadPromedio() {
+
+    totalEdad=0
+    cantidad=0
+
+    while IFS= read -r linea; do
+        # Extrae la edad, que es el sexto campo
+        edad=$(echo "$linea" | awk -F " - " '{print $6}')
+
+        # Sumar la edad y contar la cantidad
+        totalEdad=$((totalEdad + $edad))
+        cantidad=$((cantidad + 1))
+
+    done <adopciones.txt
+
+    # Calcular el promedio
+    if [ $cantidad -gt 0 ]; then
+        promedio=$(($totalEdad / $cantidad))
+        echo "La edad promedio de las mascotas es: $promedio"
+    else
+        echo "No existen adopciones."
+    fi
 }
 
 estadisticas() {
@@ -370,10 +479,12 @@ estadisticas() {
     echo "Estadisticas:"
     echo "Porcentaje de adopcion por tipo de mascota: "
     listarPorcentajes
+    echo ""
     echo "El mes en que se realizan mas adopciones es:"
-    #mostrarMesMasAdopciones
-    echo "Edad promedio de los animales adoptados:"
-    #mostrarEdadPromedio
+    mostrarMesMasAdopciones
+    echo ""
+    mostrarEdadPromedio
+    echo ""
     echo "Presione cualquier tecla para continuar:"
     read
     return
@@ -388,19 +499,16 @@ funcionAdmin() {
         echo "Seleccione Opción:"
         echo "1- Registrar Usuario"
         echo "2- Registrar Mascota"
-        echo "3- Listar mascotas disponibles para adopción"
-        echo "4- Estadisticas"
-        echo "5- Salir"
+        echo "3- Estadisticas"
+        echo "4- Salir"
         read respuesta
         if [ "$respuesta" = "1" ]; then
             registrarUsuario
         elif [ "$respuesta" = "2" ]; then
             registrarMascota
         elif [ "$respuesta" = "3" ]; then
-            listarMascotas
-        elif [ "$respuesta" = "4" ]; then
             estadisticas
-        elif [ "$respuesta" = "5" ]; then
+        elif [ "$respuesta" = "4" ]; then
             valida="false"
         else
             echo "Número inválido. Seleccione una opción correcta."
@@ -412,10 +520,10 @@ funcionAdmin() {
 funcionCliente() {
     clear
     nombre=$1
-    echo "Se ingresó como Cliente."
-    echo "Bienvenido/a $nombre!"
     valida="true"
     while [ "$valida" = "true" ]; do
+        echo "Se ingresó como Cliente."
+        echo "Bienvenido/a $nombre!"
         echo "Seleccione Opción:"
         echo "1- Listar mascotas disponibles para adopción"
         echo "2- Adoptar mascota"
@@ -428,9 +536,9 @@ funcionCliente() {
         elif [ "$respuesta" = "3" ]; then
             valida="false"
         else
-            clear
             echo "Número inválido. Seleccione una opción correcta."
         fi
+        clear
     done
 }
 

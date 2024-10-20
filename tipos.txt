@@ -1,3 +1,2 @@
-perro - 2 - 0
-gato - 2 - 1
-pato - 1 - 0
+perro - 2 - 1
+gato - 1 - 0

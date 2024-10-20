@@ -1,4 +1,2 @@
 Cedula: 12345678 Contrasena: admin
 Datos - admin - 123456789 - 00/00/0000
-Cedula: 1 Contrasena: 1
-Datos - vale - 1 - 1
