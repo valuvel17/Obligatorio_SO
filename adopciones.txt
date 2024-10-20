@@ -1,4 +1,9 @@
-
-Datos: - 1 - p - 123 - 12421 - 12421421 - 412412 - 12421  - Fecha de adopción: 12123123
-Datos: - 421 - x - 12421421 - 21421412 - 241421412 - 12421421412 - 124214214  - Fecha de adopción: 42141
-Datos: - 124 - 142 - 52151 - 521521 - 21511 - 52151 - 52151  - Fecha de adopción: 421124
+Datos: - 4 - gato - valujr - f - 9 - adorable - 03/02/2023  - Fecha de adopción: 15/12/2024
+Datos: - 2 - gato - valu - f - 20 - linda - 20/11/2024  - Fecha de adopción: 25/12/2024
+Datos: - 1 - perro - salva - m - 19 - lindo - 20/10/2024  - Fecha de adopción: 10/23/2024
+Datos: - 3 - perro - salvijr - m - 10 - feo - 12/04/2024  - Fecha de adopción: 1/2/3432
+Datos: - 4 - gato - valujr - f - 9 - adorable - 03/02/2023  - Fecha de adopción: 231
+Datos: - 4 - gato - valujr - f - 9 - adorable - 03/02/2023  - Fecha de adopción: 11111
+Datos: - 4 - gato - valujr - f - 9 - adorable - 03/02/2023  - Fecha de adopción: 
+Datos: - 4 - gato - valujr - f - 9 - adorable - 03/02/2023  - Fecha de adopción: 121212
+Datos: - 4 - gato - valujr - f - 9 - adorable - 03/02/2023  - Fecha de adopción: 121212

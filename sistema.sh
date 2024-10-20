@@ -36,7 +36,6 @@ registrarUsuario() {
     read contraU # -s para ocultar la entrada de la contraseña
     while [ -z "$contraU" ]; do
         echo -ne "\033[F\033[K" # Borra la línea anterior
-
         echo "La contraseña no puede estar vacía. Inténtalo de nuevo."
         echo -n "Ingrese contraseña: "
         read contraU # Volver a solicitar
@@ -67,7 +66,6 @@ registrarUsuario() {
     read fecNacU
     while [ -z "$fecNacU" ]; do
         echo -ne "\033[F\033[K" # Borra la línea anterior
-
         echo "La fecha de nacimiento no puede estar vacía. Inténtalo de nuevo."
         echo -n "Ingrese fecha de nacimiento (DD/MM/YYYY): "
         read fecNacU
@@ -78,7 +76,6 @@ registrarUsuario() {
     read rolU
     while ! [[ "$rolU" == "A" || "$rolU" == "a" || "$rolU" == "C" || "$rolU" == "c" ]]; do
         echo -ne "\033[F\033[K" # Borra la línea anterior
-
         echo -n "Seleccione rol válido A-(administrador) C-(cliente): "
         read rolU
         clear
@@ -107,10 +104,11 @@ registrarUsuario() {
     clear
     cargando
     if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
-        ciEnAdmin=$(grep "Cedula: $ciU" "registro_admin.txt")
-        ciEnCliente=$(grep "Cedula: $ciU" "registro_cliente.txt")
-
+        # Verificar si la cédula ya existe
+        ciEnAdmin=$(grep -w "Cedula: $ciU" "registro_admin.txt")
+        ciEnCliente=$(grep -w "Cedula: $ciU" "registro_cliente.txt")
         if [[ -z "$ciEnAdmin" && -z "$ciEnCliente" ]]; then
+            # Registrar nuevo usuario
             if [[ "$rolU" == "A" || "$rolU" == "a" ]]; then
                 echo "Cedula: $ciU Contrasena: $contraU" >>registro_admin.txt
                 echo "Datos - $nomU - $telU - $fecNacU" >>registro_admin.txt
@@ -153,7 +151,7 @@ registrarMascota() {
     echo "Pantalla de Registro de Mascotas. (No se aceptan campos vacios)"
 
     echo -n "Ingrese numero identificador:"
-    num=0
+    num=0 # el numero identificador deberia ser unico cambiar
     read num
     echo -ne "\033[F\033[K"
     while ! [[ "$num" =~ ^[1-9][0-9]*$ ]] || grep -q "Datos: - $num" "registro_mascota.txt"; do
@@ -237,11 +235,11 @@ registrarMascota() {
         cargando
         if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
             echo "Datos: - $num - $tipo - $nom - $sexo - $edad - $desc - $fec " >>registro_mascota.txt
+
             # Buscar la línea que comienza con el tipo
-            linea=$(grep "^$tipo\>" tipos.txt)
+            linea=$(grep "^$tipo - " tipos.txt) # Asegúrate de que hay un espacio después de $tipo
 
             if [ -n "$linea" ]; then # Si existe la línea
-
                 # Extraer la cantidad actual
                 cantidad=$(echo "$linea" | awk -F " - " '{print $2}')
 
@@ -249,7 +247,7 @@ registrarMascota() {
                 newCantidad=$((cantidad + 1))
 
                 # Reemplazar la línea completa con la nueva cantidad
-                sed -i "s/ $tipo - $cantidad - / $tipo - $newCantidad - /" tipos.txt
+                sed -i "s/^$tipo - $cantidad - /$tipo - $newCantidad - /" tipos.txt
 
             else
                 # Si no existe la línea, agregarla al archivo
@@ -257,6 +255,7 @@ registrarMascota() {
             fi
 
             echo "Mascota registrada correctamente"
+
         else
             echo "Volver a intentar (y) o salir (x) : "
             read r
@@ -294,11 +293,11 @@ adoptarMascota() {
     else
         echo "Mascotas disponibles para adopción:"
         while IFS= read -r linea; do
-            # Extraer el ID y el nombre de cada línea
             id=$(echo "$linea" | awk -F " - " '{print $2}')
             nombre=$(echo "$linea" | awk -F " - " '{print $4}')
             echo "ID: $id - Nombre: $nombre"
         done <"registro_mascota.txt"
+
         echo ""
         echo "Ingrese el número de la mascota que va a adoptar:"
         read numAdopcion
@@ -316,23 +315,19 @@ adoptarMascota() {
             echo -n "Ingrese fecha de adopcion (dd/mm/yyyy): "
             read fecha
             echo "Usted ha adoptado la mascota con ID $numAdopcion exitosamente!"
-            echo
             echo "$mascota - Fecha de adopción: $fecha" >>adopciones.txt
-            grep -v "Datos: - $numAdopcion" "registro_mascota.txt" > temp.txt && mv temp.txt registro_mascota.txt
+            lineaDemascota=$(grep "Datos: - $numAdopcion - " registro_mascota.txt)                               #guardo la linea antes de que sea borrada
+            grep -v "Datos: - $numAdopcion" "registro_mascota.txt" >temp.txt && mv temp.txt registro_mascota.txt #borra la linea del registro con un archivo temporal
 
-            tipo=$(grep "Datos: - $id - " registro_mascota.txt | awk -F " - " '{print $3}')
-            linea=$(grep "^$tipo\>" tipos.txt)
+            tipo=$(echo "$lineaDemascota" | awk -F " - " '{print $3}')
+            linea=$(grep "^$tipo - " tipos.txt)
+            cantidadTotal=$(echo "$linea" | awk -F " - " '{print $2}')
+            cantidadAdoptados=$(echo "$linea" | awk -F " - " '{print $3}')
 
-            # Extraer la cantidad actual de adoptados
-            cantidadTotal=$(echo "$linea" | awk -F " - " '{print $2}')  # Segunda posición
-            cantidadAdoptados=$(echo "$linea" | awk -F " - " '{print $3}')      # Tercera posición
-
-            cantidadAdoptados=$((cantidadAdoptados + 1))
+            cantidadAdoptadosNueva=$((cantidadAdoptados + 1))
 
             # Reemplazar la línea completa con las nuevas cantidades
-            sed -i "s/^$tipo - [0-9]* - [0-9]*$/$tipo - $cantidadTotal - $cantidadAdoptados/" tipos.txt
-
-
+            sed -i "s/^$tipo - $cantidadTotal - [0-9]*$/$tipo - $cantidadTotal - $cantidadAdoptadosNueva/" tipos.txt
         fi
         echo "Presione cualquier tecla para continuar..."
         read
@@ -358,15 +353,27 @@ registarAdmin() {
     clear
 }
 
+listarPorcentajes() {
+    while IFS= read -r linea; do
+        tipo=$(echo "$linea" | awk -F " - " '{print $1}')
+        total=$(echo "$linea" | awk -F " - " '{print $2}')
+        adoptados=$(echo "$linea" | awk -F " - " '{print $3}')
+
+        porcentaje=$((adoptados * 100 / total)) # Multiplicamos por 100 para obtener el porcentaje
+        echo "Porcentaje de tipo $tipo: $porcentaje %"
+    done <"tipos.txt"
+
+}
+
 estadisticas() {
     clear
     echo "Estadisticas:"
     echo "Porcentaje de adopcion por tipo de mascota: "
     listarPorcentajes
     echo "El mes en que se realizan mas adopciones es:"
-    mostrarMesMasAdopciones
+    #mostrarMesMasAdopciones
     echo "Edad promedio de los animales adoptados:"
-    mostrarEdadPromedio
+    #mostrarEdadPromedio
     echo "Presione cualquier tecla para continuar:"
     read
     return
