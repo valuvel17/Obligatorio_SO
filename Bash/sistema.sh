@@ -236,19 +236,12 @@ registrarMascota() {
         if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
             echo "Datos: - $num - $tipo - $nom - $sexo - $edad - $desc - $fec " >>registro_mascota.txt
 
-<<<<<<< HEAD:Bash/sistema.sh
-            # Buscar la línea que comienza con el tipo
-            linea=$(grep "^$tipo - " tipos.txt) # Asegúrate de que hay un espacio después de $tipo
-
-            if [ -n "$linea" ]; then # Si existe la línea
-                # Extraer la cantidad actual
-=======
             ## sumar contador a tipo
             # Buscar la línea que comienza con el tipo
             linea=$(grep "^$tipo - " tipos.txt)
 
             if [ -n "$linea" ]; then # Si existe la línea
->>>>>>> 90b4022e4807d6ebf6e2cae9731d5df9317af200:sistema.sh
+            
                 cantidad=$(echo "$linea" | awk -F " - " '{print $2}')
                 newCantidad=$((cantidad + 1))
 
@@ -329,25 +322,15 @@ adoptarMascota() {
             echo -n "Ingrese fecha de adopcion (dd/mm/yyyy): "
             read fecha
             echo "Usted ha adoptado la mascota con ID $numAdopcion exitosamente!"
-<<<<<<< HEAD:Bash/sistema.sh
             echo
             echo "$mascota - Fecha de adopción: $fecha" >>adopciones.txt
             grep -v "Datos: - $numAdopcion" "registro_mascota.txt" >temp.txt && mv temp.txt registro_mascota.txt
-=======
-            echo "$mascota- Fecha de adopción: $fecha" >>adopciones.txt
->>>>>>> 90b4022e4807d6ebf6e2cae9731d5df9317af200:sistema.sh
 
             #guardo la linea antes de que sea borrada
             lineaDemascota=$(grep "Datos: - $numAdopcion - " registro_mascota.txt)
 
-<<<<<<< HEAD:Bash/sistema.sh
-            # Extraer la cantidad actual de adoptados
-            cantidadTotal=$(echo "$linea" | awk -F " - " '{print $2}')     # Segunda posición
-            cantidadAdoptados=$(echo "$linea" | awk -F " - " '{print $3}') # Tercera posición
-=======
             #borra la linea del registro con un archivo temporal
             grep -v "Datos: - $numAdopcion" "registro_mascota.txt" >temp.txt && mv temp.txt registro_mascota.txt
->>>>>>> 90b4022e4807d6ebf6e2cae9731d5df9317af200:sistema.sh
 
             ##sumar contador de adoptados
             tipo=$(echo "$lineaDemascota" | awk -F " - " '{print $3}')
@@ -360,8 +343,6 @@ adoptarMascota() {
             # Reemplazar la línea completa con las nuevas cantidades
             sed -i "s/^$tipo - $cantidadTotal - [0-9]*$/$tipo - $cantidadTotal - $cantidadAdoptadosNueva/" tipos.txt
 
-<<<<<<< HEAD:Bash/sistema.sh
-=======
             ## sumar contador de meses
             mes=$(echo "$fecha" | awk -F "/" '{print $2}')
             nombreMes=$(hallarNombre "$mes")
@@ -369,7 +350,6 @@ adoptarMascota() {
             contadorNuevo=$((contadorActual + 1))
             sed -i "s/^$nombreMes - $contadorActual/$nombreMes - $contadorNuevo/" adopciones_meses.txt
 
->>>>>>> 90b4022e4807d6ebf6e2cae9731d5df9317af200:sistema.sh
         fi
         echo "Presione cualquier tecla para continuar..."
         read
