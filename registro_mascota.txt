@@ -1,2 +1,0 @@
-Datos: - 1 - perro - salva - macho - 19 - amoroso - 19/05/2023 
-Datos: - 2 - gato - vale - hembra - 20 - linda - 10/11/2004 
