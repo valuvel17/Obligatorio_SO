@@ -237,11 +237,11 @@ registrarMascota() {
         cargando
         if [[ "$respuesta" == "Y" || "$respuesta" == "y" ]]; then
             echo "Datos: - $num - $tipo - $nom - $sexo - $edad - $desc - $fec " >>registro_mascota.txt
+
             # Buscar la línea que comienza con el tipo
-            linea=$(grep "^$tipo\>" tipos.txt)
+            linea=$(grep "^$tipo - " tipos.txt) # Asegúrate de que hay un espacio después de $tipo
 
             if [ -n "$linea" ]; then # Si existe la línea
-
                 # Extraer la cantidad actual
                 cantidad=$(echo "$linea" | awk -F " - " '{print $2}')
 
@@ -249,7 +249,7 @@ registrarMascota() {
                 newCantidad=$((cantidad + 1))
 
                 # Reemplazar la línea completa con la nueva cantidad
-                sed -i "s/ $tipo - $cantidad - / $tipo - $newCantidad - /" tipos.txt
+                sed -i "s/^$tipo - $cantidad - /$tipo - $newCantidad - /" tipos.txt
 
             else
                 # Si no existe la línea, agregarla al archivo
@@ -257,6 +257,7 @@ registrarMascota() {
             fi
 
             echo "Mascota registrada correctamente"
+
         else
             echo "Volver a intentar (y) o salir (x) : "
             read r
@@ -318,20 +319,19 @@ adoptarMascota() {
             echo "Usted ha adoptado la mascota con ID $numAdopcion exitosamente!"
             echo
             echo "$mascota - Fecha de adopción: $fecha" >>adopciones.txt
-            grep -v "Datos: - $numAdopcion" "registro_mascota.txt" > temp.txt && mv temp.txt registro_mascota.txt
+            grep -v "Datos: - $numAdopcion" "registro_mascota.txt" >temp.txt && mv temp.txt registro_mascota.txt
 
             tipo=$(grep "Datos: - $id - " registro_mascota.txt | awk -F " - " '{print $3}')
             linea=$(grep "^$tipo\>" tipos.txt)
 
             # Extraer la cantidad actual de adoptados
-            cantidadTotal=$(echo "$linea" | awk -F " - " '{print $2}')  # Segunda posición
-            cantidadAdoptados=$(echo "$linea" | awk -F " - " '{print $3}')      # Tercera posición
+            cantidadTotal=$(echo "$linea" | awk -F " - " '{print $2}')     # Segunda posición
+            cantidadAdoptados=$(echo "$linea" | awk -F " - " '{print $3}') # Tercera posición
 
             cantidadAdoptados=$((cantidadAdoptados + 1))
 
             # Reemplazar la línea completa con las nuevas cantidades
             sed -i "s/^$tipo - [0-9]* - [0-9]*$/$tipo - $cantidadTotal - $cantidadAdoptados/" tipos.txt
-
 
         fi
         echo "Presione cualquier tecla para continuar..."
